@@ -1,130 +1,202 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
+import {Canvas, Line, vec} from '@shopify/react-native-skia';
 import React from 'react';
-import type {PropsWithChildren} from 'react';
+import {SafeAreaView, StyleSheet, Text, View} from 'react-native';
 import {
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+  Delegate,
+  Dims,
+  MediapipeCamera,
+  Point,
+  RunningMode,
+  denormalizePoint,
+  faceLandmarkDetectionModuleConstants,
+  framePointToView,
+  useFaceLandmarkDetection,
+} from 'react-native-mediapipe';
+import {useCameraPermission} from 'react-native-vision-camera';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// we are going to draw a series of line segments
+type DrawSegment = {
+  startPoint: Point;
+  endPoint: Point;
+};
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+// this code converts each segment from the "normalized" coordinate space
+// that the face landmarks are in (0-1) to the "view" coordinate space
+export function convertToViewSpace(
+  segment: DrawSegment,
+  frameSize: Dims,
+  viewSize: Dims,
+  mirrored = false,
+): DrawSegment {
+  return {
+    startPoint: framePointToView(
+      denormalizePoint(segment.startPoint, frameSize),
+      frameSize,
+      viewSize,
+      'cover',
+      mirrored,
+    ),
+    endPoint: framePointToView(
+      denormalizePoint(segment.endPoint, frameSize),
+      frameSize,
+      viewSize,
+      'cover',
+      mirrored,
+    ),
+  };
 }
+
+const eyeLandmarks = {
+  left: faceLandmarkDetectionModuleConstants().knownLandmarks.leftEye,
+  right: faceLandmarkDetectionModuleConstants().knownLandmarks.rightEye,
+};
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const cameraPermission = useCameraPermission();
+  const [segments, setSegments] = React.useState<DrawSegment[]>([
+    {startPoint: {x: 10, y: 10}, endPoint: {x: 100, y: 100}},
+  ]);
+  const faceDetection = useFaceLandmarkDetection(
+    (results, viewSize, mirrored) => {
+      const landmarks = results.results[0].faceLandmarks[0];
+      if (!landmarks || landmarks.length === 0) {
+        return;
+      }
+      const frameSize = {
+        width: results.inputImageWidth,
+        height: results.inputImageHeight,
+      };
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the reccomendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+      // get all the segments for the eyes
+      const leftEyeSegments: DrawSegment[] = eyeLandmarks.left.map(seg =>
+        convertToViewSpace(
+          {
+            startPoint: landmarks[seg.start],
+            endPoint: landmarks[seg.end],
+          },
+          frameSize,
+          viewSize,
+          mirrored,
+        ),
+      );
+      const rightEyeSegments: DrawSegment[] = eyeLandmarks.right.map(seg =>
+        convertToViewSpace(
+          {
+            startPoint: landmarks[seg.start],
+            endPoint: landmarks[seg.end],
+          },
+          frameSize,
+          viewSize,
+          mirrored,
+        ),
+      );
+      setSegments([leftEyeSegments, rightEyeSegments].flat());
+    },
+    error => {
+      console.error(`onError: ${error}`);
+    },
+    RunningMode.LIVE_STREAM,
+    'face_landmarker.task',
+    {
+      delegate: Delegate.GPU,
+    },
+  );
 
   return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
+    <SafeAreaView style={styles.root}>
+      {cameraPermission.hasPermission ? (
+        <View style={styles.container}>
+          <MediapipeCamera style={styles.camera} solution={faceDetection} />
+          <Canvas style={styles.overlay}>
+            {segments.map((segment, index) => (
+              <Line
+                key={index}
+                p1={vec(segment.startPoint.x, segment.startPoint.y)}
+                p2={vec(segment.endPoint.x, segment.endPoint.y)}
+                color="red"
+                style="stroke"
+                strokeWidth={4}
+              />
+            ))}
+          </Canvas>
         </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+      ) : (
+        <RequestPermissions
+          hasCameraPermission={cameraPermission.hasPermission}
+          requestCameraPermission={cameraPermission.requestPermission}
+        />
+      )}
+    </SafeAreaView>
   );
 }
 
+const RequestPermissions: React.FC<{
+  hasCameraPermission: boolean;
+  requestCameraPermission: () => Promise<boolean>;
+}> = ({hasCameraPermission, requestCameraPermission}) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.welcome}>Welcome to React Native Mediapipe</Text>
+      <View style={styles.permissionsContainer}>
+        {!hasCameraPermission && (
+          <Text style={styles.permissionText}>
+            React Native Mediapipe needs{' '}
+            <Text style={styles.bold}>Camera permission</Text>.{' '}
+            <Text style={styles.hyperlink} onPress={requestCameraPermission}>
+              Grant
+            </Text>
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  root: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'black',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  welcome: {color: 'black', fontSize: 38, fontWeight: 'bold', maxWidth: '80%'},
+  banner: {
+    position: 'absolute',
+    opacity: 0.4,
+    bottom: 0,
+    left: 0,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  container: {
+    height: '100%',
+    width: '100%',
+    backgroundColor: 'white',
+    flexDirection: 'column',
+    position: 'relative',
   },
-  highlight: {
-    fontWeight: '700',
+  camera: {
+    flex: 1,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  categoriesText: {color: 'black', fontSize: 36},
+  permissionsContainer: {
+    marginTop: 30,
+  },
+  permissionText: {
+    color: 'black',
+    fontSize: 17,
+  },
+  hyperlink: {
+    color: '#007aff',
+    fontWeight: 'bold',
+  },
+  bold: {
+    fontWeight: 'bold',
   },
 });
 
