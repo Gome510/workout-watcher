@@ -1,0 +1,12 @@
+{
+  "name": "workout-watcher",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Gome510/workout-watcher.git",
+  "author": "Pablo Gomez-Echegaray <pablogomezechegaray@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
