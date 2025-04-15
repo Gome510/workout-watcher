@@ -6,7 +6,15 @@
   "author": "Pablo Gomez-Echegaray <pablogomezechegaray@gmail.com>",
   "license": "MIT",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ]
+  "workspaces": {
+    "packages": [
+      "apps/*"
+    ],
+    "nohoist": [
+      "**/react-native-mediapipe",
+      "**/react-native-mediapipe/**",
+      "**/react-native/scripts/react_native_pods",
+      "**/@react-native-community/cli-platform-ios/native_modules"
+    ]
+  }
 }
