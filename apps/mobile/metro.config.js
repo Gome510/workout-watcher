@@ -1,4 +1,5 @@
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const path = require('path');
 
 /**
  * Metro configuration
@@ -13,6 +14,7 @@ const {
 
 const config = {
   // Your existing Metro configuration options
+  watchFolders: [path.resolve(__dirname, '../..')],
 };
 const mergedDefaultConfig = mergeConfig(getDefaultConfig(__dirname), config);
 
