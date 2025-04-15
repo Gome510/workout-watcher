@@ -5,6 +5,9 @@
   "repository": "https://github.com/Gome510/workout-watcher.git",
   "author": "Pablo Gomez-Echegaray <pablogomezechegaray@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "clean": "find . -type d \\( -name \"node_modules\" -o -name \".kotlin\" -o -name \".gradle\" -o -name \"build\" -o -name \"Pods\" \\) -prune -exec rm -rf {} +"
+  },
   "private": true,
   "workspaces": {
     "packages": [
