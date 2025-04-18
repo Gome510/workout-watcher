@@ -1,8 +1,12 @@
 {
   "name": "@workout-watcher/ui",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "license": "MIT",
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "postinstall": "yarn build"
+  },
   "devDependencies": {
     "@types/react": "^19.0.0",
     "typescript": "^5.8.3"
