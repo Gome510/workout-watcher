@@ -15,6 +15,7 @@ import {
 import {SkPoint, vec} from '@shopify/react-native-skia';
 import {PoseDrawFrame} from './src/Drawing';
 import {useSharedValue} from 'react-native-reanimated';
+import {NormalButton} from '@workout-watcher/ui';
 
 const App = () => {
   const {requestPermission, hasPermission} = useCameraPermission();
