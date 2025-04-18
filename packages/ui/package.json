@@ -4,7 +4,6 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "@tsconfig/react-native": "^3.0.5",
     "@types/react": "^19.0.0",
     "typescript": "^5.8.3"
   },
