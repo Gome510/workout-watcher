@@ -1,0 +1,13 @@
+{
+  "name": "ui",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-native": "^0.79.1"
+  }
+}
