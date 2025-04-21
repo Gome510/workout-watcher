@@ -4,7 +4,11 @@ import React from "react";
 const NormalButton = () => {
   return (
     <View>
-      <Button title="Button" onPress={() => console.log("press")} />
+      <Button
+        title="Button"
+        onPress={() => console.log("press")}
+        testID="button"
+      />
     </View>
   );
 };
