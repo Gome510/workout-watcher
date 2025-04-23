@@ -16,8 +16,33 @@ import {SkPoint, vec} from '@shopify/react-native-skia';
 import {PoseDrawFrame} from './src/Drawing';
 import {useSharedValue} from 'react-native-reanimated';
 import {NormalButton} from '@workout-watcher/ui';
+import {
+  createStaticNavigation,
+  NavigationContainer,
+} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
-const App = () => {
+const NeedPermissions: React.FC<{askForPermissions: () => void}> = ({
+  askForPermissions,
+}) => {
+  return (
+    <View style={styles.container}>
+      <View style={styles.permissionsBox}>
+        <Text style={styles.noPermsText}>
+          Allow App to use your Camera and Microphone
+        </Text>
+        <Text style={styles.permsInfoText}>
+          App needs access to your camera in order for Object Detection to work.
+        </Text>
+      </View>
+      <Pressable style={styles.permsButton} onPress={askForPermissions}>
+        <Text style={styles.permsButtonText}>Allow</Text>
+      </Pressable>
+    </View>
+  );
+};
+
+const PoseCamera = () => {
   const {requestPermission, hasPermission} = useCameraPermission();
   const [active, setActive] = useState<CameraPosition>('back');
   function setActiveCamera() {
@@ -102,27 +127,18 @@ const App = () => {
   );
 };
 
-export default App;
+const Stack = createNativeStackNavigator({
+  screens: {
+    Home: PoseCamera,
+  },
+});
+const Navigation = createStaticNavigation(Stack);
 
-const NeedPermissions: React.FC<{askForPermissions: () => void}> = ({
-  askForPermissions,
-}) => {
-  return (
-    <View style={styles.container}>
-      <View style={styles.permissionsBox}>
-        <Text style={styles.noPermsText}>
-          Allow App to use your Camera and Microphone
-        </Text>
-        <Text style={styles.permsInfoText}>
-          App needs access to your camera in order for Object Detection to work.
-        </Text>
-      </View>
-      <Pressable style={styles.permsButton} onPress={askForPermissions}>
-        <Text style={styles.permsButtonText}>Allow</Text>
-      </Pressable>
-    </View>
-  );
+const App = () => {
+  return <Navigation />;
 };
+
+export default App;
 
 const styles = StyleSheet.create({
   container: {
