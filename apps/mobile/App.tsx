@@ -21,6 +21,7 @@ import {
   NavigationContainer,
 } from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import HomeScreen from './src/screens/HomeScreen';
 
 const NeedPermissions: React.FC<{askForPermissions: () => void}> = ({
   askForPermissions,
@@ -128,8 +129,10 @@ const PoseCamera = () => {
 };
 
 const Stack = createNativeStackNavigator({
+  initialRouteName: 'Home',
   screens: {
-    Home: PoseCamera,
+    Home: HomeScreen,
+    PoseCamera: PoseCamera,
   },
 });
 const Navigation = createStaticNavigation(Stack);
