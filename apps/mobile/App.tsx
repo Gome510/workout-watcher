@@ -16,12 +16,9 @@ import {SkPoint, vec} from '@shopify/react-native-skia';
 import {PoseDrawFrame} from './src/Drawing';
 import {useSharedValue} from 'react-native-reanimated';
 import {NormalButton} from '@workout-watcher/ui';
-import {
-  createStaticNavigation,
-  NavigationContainer,
-} from '@react-navigation/native';
+import {createStaticNavigation} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import HomeScreen from './src/screens/HomeScreen';
+import HomeScreen from './src/screens/Home/HomeScreen';
 
 const NeedPermissions: React.FC<{askForPermissions: () => void}> = ({
   askForPermissions,
@@ -129,6 +126,9 @@ const PoseCamera = () => {
 };
 
 const Stack = createNativeStackNavigator({
+  screenOptions: {
+    headerShown: false,
+  },
   initialRouteName: 'Home',
   screens: {
     Home: HomeScreen,
