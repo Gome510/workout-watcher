@@ -1,0 +1,22 @@
+export const fontFamilies = {
+  MONTSERRAT: {
+    black: 'MontserratAlternatesBlack',
+    blackItalic: 'MontserratAlternatesBlackItalic',
+    bold: 'MontserratAlternatesBold',
+    boldItalic: 'MontserratAlternatesBoldItalic',
+    extraBold: 'MontserratAlternatesExtraBold',
+    extraBoldItalic: 'MontserratAlternatesExtraBoldItalic',
+    extraLight: 'MontserratAlternatesExtraLight',
+    extraLightItalic: 'MontserratAlternatesExtraLightItalic',
+    italic: 'MontserratAlternatesItalic',
+    light: 'MontserratAlternatesLight',
+    lightItalic: 'MontserratAlternatesLightItalic',
+    medium: 'MontserratAlternatesMedium',
+    mediumItalic: 'MontserratAlternatesMediumItalic',
+    regular: 'MontserratAlternatesRegular',
+    semiBold: 'MontserratAlternatesSemiBold',
+    semiBoldItalic: 'MontserratAlternatesSemiBoldItalic',
+    thin: 'MontserratAlternatesThin',
+    thinItalic: 'MontserratAlternatesThinItalic',
+  },
+};

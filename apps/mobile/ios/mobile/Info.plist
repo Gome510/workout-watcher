@@ -26,14 +26,13 @@
 	<true/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-	  <!-- Do not change NSAllowsArbitraryLoads to true, or you will risk app rejection! -->
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string></string>
+	<string/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -48,5 +47,26 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>MontserratAlternatesBlack.ttf</string>
+		<string>MontserratAlternatesBlackItalic.ttf</string>
+		<string>MontserratAlternatesBold.ttf</string>
+		<string>MontserratAlternatesBoldItalic.ttf</string>
+		<string>MontserratAlternatesExtraBold.ttf</string>
+		<string>MontserratAlternatesExtraBoldItalic.ttf</string>
+		<string>MontserratAlternatesExtraLight.ttf</string>
+		<string>MontserratAlternatesExtraLightItalic.ttf</string>
+		<string>MontserratAlternatesItalic.ttf</string>
+		<string>MontserratAlternatesLight.ttf</string>
+		<string>MontserratAlternatesLightItalic.ttf</string>
+		<string>MontserratAlternatesMedium.ttf</string>
+		<string>MontserratAlternatesMediumItalic.ttf</string>
+		<string>MontserratAlternatesRegular.ttf</string>
+		<string>MontserratAlternatesSemiBold.ttf</string>
+		<string>MontserratAlternatesSemiBoldItalic.ttf</string>
+		<string>MontserratAlternatesThin.ttf</string>
+		<string>MontserratAlternatesThinItalic.ttf</string>
+	</array>
 </dict>
 </plist>
