@@ -1,7 +1,7 @@
 import { View, Button } from "react-native";
 import React from "react";
 
-const NormalButton = () => {
+export const NormalButton = () => {
   return (
     <View>
       <Button
@@ -12,5 +12,3 @@ const NormalButton = () => {
     </View>
   );
 };
-
-export default NormalButton;

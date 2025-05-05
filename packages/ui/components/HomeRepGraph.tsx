@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from "react";
 import Svg, {
   Circle,
   Defs,
@@ -8,23 +8,23 @@ import Svg, {
   Rect,
   Stop,
   Text,
-} from 'react-native-svg';
-import {max, line, scaleLinear, area, curveBumpX} from 'd3';
+} from "react-native-svg";
+import { max, line, scaleLinear, area, curveBumpX } from "d3";
 import {
   GestureResponderEvent,
   Pressable,
   StyleProp,
   useWindowDimensions,
   ViewStyle,
-} from 'react-native';
-import {fontFamilies} from '../../../constants/fonts';
+} from "react-native";
+import { fontFamilies } from "../constants/fonts";
 import Animated, {
   Easing,
   useAnimatedProps,
   useSharedValue,
   withTiming,
-} from 'react-native-reanimated';
-import {getYForX, parse} from 'react-native-redash';
+} from "react-native-reanimated";
+import { getYForX, parse } from "react-native-redash";
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
@@ -34,7 +34,7 @@ const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const data = [8, 10, 0, 11, 15, 10, 3];
 const dataPoints: [number, number][] = data.map((d, i) => [i, d]);
 
-const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const today = new Date(Date.now()).getDay();
 const shiftedDays = [
   ...dayNames.slice(today + 1),
@@ -51,15 +51,15 @@ type HomeRepGraph = {
   width?: number;
   height?: number;
   horizontalPadding?: number;
-  labelSize?: 'small' | 'medium' | 'large';
+  labelSize?: "small" | "medium" | "large";
 };
 
-const HomeRepGraph = ({
+export const HomeRepGraph = ({
   style,
   height = 300,
   width: viewWidth,
   horizontalPadding = 16,
-  labelSize = 'large',
+  labelSize = "large",
 }: HomeRepGraph) => {
   const todayDataIndex = dataPoints.length - 1;
   const [activePoint, setActivePoint] = useState(todayDataIndex);
@@ -75,7 +75,7 @@ const HomeRepGraph = ({
   const dayLabelHeight = dayFontSize + 8;
   const dayLabelWidth = Math.max(labelWidth, 40);
 
-  const {width: screenWidth} = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   const width = viewWidth ? viewWidth : screenWidth;
   const graphWidth = width - dayLabelWidth - horizontalPadding * 2;
   const graphHeight = height - dayLabelHeight;
@@ -91,24 +91,24 @@ const HomeRepGraph = ({
   const yScale = scaleLinear().domain([0, yMax]).range([graphHeight, 0]);
 
   const lineGenerator = line<[number, number]>()
-    .x(d => xScale(d[0]))
-    .y(d => yScale(d[1]))
+    .x((d) => xScale(d[0]))
+    .y((d) => yScale(d[1]))
     .curve(curveBumpX);
 
   const areaGenerator = area<[number, number]>()
-    .x(d => xScale(d[0]))
-    .y1(d => yScale(d[1]))
+    .x((d) => xScale(d[0]))
+    .y1((d) => yScale(d[1]))
     .y0(yScale(0))
     .curve(curveBumpX);
 
-  const pathD = lineGenerator(dataPoints) || '';
+  const pathD = lineGenerator(dataPoints) || "";
   const areaD = areaGenerator(dataPoints);
 
   const parsedPath = parse(pathD);
 
   const xPositions = data.map((d, i) => xScale(i));
   const touchColumnWidth = xPositions[1] - xPositions[0];
-  const touchBuckets: [number, number][] = xPositions.map(x => [
+  const touchBuckets: [number, number][] = xPositions.map((x) => [
     x - touchColumnWidth / 2,
     x + touchColumnWidth / 2,
   ]);
@@ -153,7 +153,7 @@ const HomeRepGraph = ({
           withTiming(xPositions[i], {
             duration: 500,
             easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-          }),
+          })
         );
         break;
       }
@@ -170,8 +170,8 @@ const HomeRepGraph = ({
           </LinearGradient>
         </Defs>
 
-        <Path d={areaD || ''} fill="url(#background)" />
-        <Path d={pathD || ''} stroke="white" strokeWidth={2} fill="none" />
+        <Path d={areaD || ""} fill="url(#background)" />
+        <Path d={pathD || ""} stroke="white" strokeWidth={2} fill="none" />
 
         {shiftedDays.map((day, i) => (
           <Text
@@ -184,17 +184,18 @@ const HomeRepGraph = ({
             x={xScale(i)}
             y={height}
             textAnchor="middle"
-            fill={activePoint === i ? 'white' : 'lightgrey'}
-            key={day}>
+            fill={activePoint === i ? "white" : "lightgrey"}
+            key={day}
+          >
             {day}
           </Text>
         ))}
-        {dataPoints.map(point => (
+        {dataPoints.map((point) => (
           <Circle
             x={xScale(point[0])}
             y={yScale(point[1])}
             r={5}
-            fill={'white'}
+            fill={"white"}
             key={point[0]}
           />
         ))}
@@ -210,7 +211,7 @@ const HomeRepGraph = ({
         />
 
         <AnimatedPolygon
-          points={'0,0 3,6, 6,0'}
+          points={"0,0 3,6, 6,0"}
           animatedProps={animatedPolyProps}
           //translate={}
           translateY={labelOffsetY + labelHeight}
@@ -220,19 +221,20 @@ const HomeRepGraph = ({
         />
         <AnimatedText
           animatedProps={animatedLabelProps}
-          fontSize={'1.5em'}
+          fontSize={"1.5em"}
           dy={textPosition}
           fontFamily={fontFamilies.MONTSERRAT.semiBold}
           alignmentBaseline="central"
-          textAnchor="middle">
+          textAnchor="middle"
+        >
           {dataPoints[activePoint][1]}
         </AnimatedText>
 
         <AnimatedCircle
           animatedProps={animatedCircleProps}
           r={6}
-          fill={'white'}
-          stroke={'#F6F3BA'}
+          fill={"white"}
+          stroke={"#F6F3BA"}
           strokeWidth={4}
         />
         <AnimatedRect
@@ -240,11 +242,9 @@ const HomeRepGraph = ({
           translateX={-0.5}
           width={1}
           height={max([yScale(yMax - dataPoints[activePoint][1]), 0])}
-          fill={'#F6F3BA'}
+          fill={"#F6F3BA"}
         />
       </Svg>
     </Pressable>
   );
 };
-
-export default HomeRepGraph;

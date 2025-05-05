@@ -2,7 +2,7 @@ import {View, Text, Image} from 'react-native';
 import React from 'react';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import HomeRepGraph from './components/HomeRepGraph.tsx';
+import {HomeRepGraph} from '@workout-watcher/ui';
 import {styles} from '../styles';
 
 const HomeScreen = () => {
