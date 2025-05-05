@@ -22,7 +22,7 @@ const HomeScreen = () => {
             style={styles.pfp}
           />
         </View>
-        <HomeRepGraph />
+        <HomeRepGraph style={{marginLeft: -styles.contentContainer.padding}} />
       </View>
     </LinearGradient>
   );

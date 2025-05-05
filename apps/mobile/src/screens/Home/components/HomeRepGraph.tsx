@@ -2,21 +2,34 @@ import React, {useState} from 'react';
 import Svg, {
   Circle,
   Defs,
-  G,
   LinearGradient,
   Path,
+  Polygon,
   Rect,
   Stop,
   Text,
 } from 'react-native-svg';
-import {max, line, scaleLinear, area, curveBumpX, bin} from 'd3';
+import {max, line, scaleLinear, area, curveBumpX} from 'd3';
 import {
   GestureResponderEvent,
   Pressable,
+  StyleProp,
   useWindowDimensions,
+  ViewStyle,
 } from 'react-native';
-import {styles} from '../../styles';
 import {fontFamilies} from '../../../constants/fonts';
+import Animated, {
+  Easing,
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import {getYForX, parse} from 'react-native-redash';
+
+const AnimatedRect = Animated.createAnimatedComponent(Rect);
+const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
+const AnimatedText = Animated.createAnimatedComponent(Text);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 const data = [8, 10, 0, 11, 15, 10, 3];
 const dataPoints: [number, number][] = data.map((d, i) => [i, d]);
@@ -27,35 +40,54 @@ const shiftedDays = [
   ...dayNames.slice(today + 1),
   ...dayNames.slice(0, today + 1),
 ];
+const labelSizes = {
+  small: 40,
+  medium: 50,
+  large: 60,
+} as const;
 
-const HomeRepGraph = () => {
-  const [activePoint, setActivePoint] = useState(6);
+type HomeRepGraph = {
+  style?: StyleProp<ViewStyle>;
+  width?: number;
+  height?: number;
+  horizontalPadding?: number;
+  labelSize?: 'small' | 'medium' | 'large';
+};
 
-  const dayLabelHeight = 20;
-  const dayLabelWidth = 40;
+const HomeRepGraph = ({
+  style,
+  height = 300,
+  width: viewWidth,
+  horizontalPadding = 16,
+  labelSize = 'large',
+}: HomeRepGraph) => {
+  const todayDataIndex = dataPoints.length - 1;
+  const [activePoint, setActivePoint] = useState(todayDataIndex);
+
+  const labelWidth = labelSizes[labelSize];
+  const labelHeight = 29;
+  const labelOffsetX = -labelWidth / 2;
+  const labelOffsetY = -labelHeight - 15;
+  const arrowWidth = 6;
+  const textPosition = labelOffsetY + labelHeight / 2;
+
+  const dayFontSize = 16;
+  const dayLabelHeight = dayFontSize + 8;
+  const dayLabelWidth = Math.max(labelWidth, 40);
 
   const {width: screenWidth} = useWindowDimensions();
-  const containerPadding = styles.contentContainer.padding;
-  const width = screenWidth;
-  const height = 300;
-  const graphWidth =
-    width - dayLabelWidth - styles.contentContainer.padding * 2;
+  const width = viewWidth ? viewWidth : screenWidth;
+  const graphWidth = width - dayLabelWidth - horizontalPadding * 2;
   const graphHeight = height - dayLabelHeight;
-
-  const labelPathHeight = 43;
-  const labelPathWidth = 74;
-  const labelWidth = 50;
-  const labelScaleFactor = labelWidth / labelPathWidth;
-  const textPosition = labelPathHeight * labelScaleFactor * (-20 / 35);
 
   const xScale = scaleLinear()
     .domain([0, data.length - 1])
     .range([
-      containerPadding + dayLabelWidth / 2,
-      graphWidth + containerPadding + dayLabelWidth / 2,
+      horizontalPadding + dayLabelWidth / 2,
+      graphWidth + horizontalPadding + dayLabelWidth / 2,
     ]);
-
-  const yMax = (max(data) || 0) + 3;
+  const maxData = max(data) || 0;
+  const yMax = maxData + maxData * 0.2;
   const yScale = scaleLinear().domain([0, yMax]).range([graphHeight, 0]);
 
   const lineGenerator = line<[number, number]>()
@@ -69,8 +101,10 @@ const HomeRepGraph = () => {
     .y0(yScale(0))
     .curve(curveBumpX);
 
-  const pathD = lineGenerator(dataPoints);
+  const pathD = lineGenerator(dataPoints) || '';
   const areaD = areaGenerator(dataPoints);
+
+  const parsedPath = parse(pathD);
 
   const xPositions = data.map((d, i) => xScale(i));
   const touchColumnWidth = xPositions[1] - xPositions[0];
@@ -79,11 +113,48 @@ const HomeRepGraph = () => {
     x + touchColumnWidth / 2,
   ]);
 
+  const progress = useSharedValue(xScale(dataPoints[todayDataIndex][0]));
+
+  const animatedBarProps = useAnimatedProps(() => {
+    return {
+      x: progress.get(),
+      y: (getYForX(parsedPath, progress.get()) || 0) + 10,
+      height: graphHeight - (getYForX(parsedPath, progress.get()) || 0),
+    };
+  });
+  const animatedLabelProps = useAnimatedProps(() => {
+    return {
+      x: progress.get(),
+      y: getYForX(parsedPath, progress.get()) || 0,
+    };
+  });
+  const animatedPolyProps = useAnimatedProps(() => {
+    const x = progress.get();
+    const y = getYForX(parsedPath, progress.get()) || 0;
+    return {
+      points: `${x},${y} ${x + arrowWidth / 2},${y + arrowWidth} ${
+        x + arrowWidth
+      },${y}`,
+    };
+  });
+  const animatedCircleProps = useAnimatedProps(() => {
+    return {
+      cx: progress.get(),
+      cy: getYForX(parsedPath, progress.get()) || 0,
+    };
+  });
+
   function handlePress(event: GestureResponderEvent) {
     const pressX = event.nativeEvent.locationX;
     for (let i = 0; i < touchBuckets.length; i++) {
       if (touchBuckets[i][0] <= pressX && pressX <= touchBuckets[i][1]) {
         setActivePoint(i);
+        progress.set(
+          withTiming(xPositions[i], {
+            duration: 500,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          }),
+        );
         break;
       }
     }
@@ -91,26 +162,25 @@ const HomeRepGraph = () => {
 
   return (
     <Pressable onPress={handlePress}>
-      <Svg
-        width={width}
-        height={height}
-        style={{marginLeft: -containerPadding}}>
+      <Svg width={width} height={height} style={style}>
         <Defs>
           <LinearGradient id="background" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor="#0AE1EF" stopOpacity={0.2} />
             <Stop offset="1" stopColor="#0AE1EF" stopOpacity={0} />
           </LinearGradient>
         </Defs>
+
         <Path d={areaD || ''} fill="url(#background)" />
         <Path d={pathD || ''} stroke="white" strokeWidth={2} fill="none" />
+
         {shiftedDays.map((day, i) => (
           <Text
-            style={{
-              fontFamily:
-                activePoint === i
-                  ? fontFamilies.MONTSERRAT.semiBold
-                  : styles.text.fontFamily,
-            }}
+            fontFamily={
+              activePoint === i
+                ? fontFamilies.MONTSERRAT.semiBold
+                : fontFamilies.MONTSERRAT.regular
+            }
+            fontSize={16}
             x={xScale(i)}
             y={height}
             textAnchor="middle"
@@ -128,35 +198,46 @@ const HomeRepGraph = () => {
             key={point[0]}
           />
         ))}
-        <G
-          x={xScale(dataPoints[activePoint][0])}
-          y={yScale(dataPoints[activePoint][1]) - 10}>
-          <Path
-            transform={`scale(${labelScaleFactor}) 
-          translate(-${labelPathWidth / 2},-${labelPathHeight})`}
-            d="M0 6C0 3 3 0 6 0H68C71 0 74 3 74 6V29C74 33 71 36 68 36C61 36 50 36 47 36C44 36 42 43 37 43C33 43 31 36 27 36C24 36 13 36 6 36C3 36 0 33 0 29V6Z"
-            fill="#F6F3BA"
-          />
-          <Text
-            style={{fontFamily: fontFamilies.MONTSERRAT.semiBold}}
-            fontSize={'1.5em'}
-            dy={textPosition}
-            alignmentBaseline="central"
-            textAnchor="middle">
-            {dataPoints[activePoint][1]}
-          </Text>
-        </G>
-        <Circle
-          x={xScale(dataPoints[activePoint][0])}
-          y={yScale(dataPoints[activePoint][1])}
+
+        <AnimatedRect
+          animatedProps={animatedLabelProps}
+          translateX={labelOffsetX}
+          translateY={labelOffsetY}
+          rx={6}
+          width={labelWidth}
+          height={labelHeight}
+          fill="#F6F3BA"
+        />
+
+        <AnimatedPolygon
+          points={'0,0 3,6, 6,0'}
+          animatedProps={animatedPolyProps}
+          //translate={}
+          translateY={labelOffsetY + labelHeight}
+          translateX={-3}
+          strokeLinejoin="round"
+          fill="#F6F3BA"
+        />
+        <AnimatedText
+          animatedProps={animatedLabelProps}
+          fontSize={'1.5em'}
+          dy={textPosition}
+          fontFamily={fontFamilies.MONTSERRAT.semiBold}
+          alignmentBaseline="central"
+          textAnchor="middle">
+          {dataPoints[activePoint][1]}
+        </AnimatedText>
+
+        <AnimatedCircle
+          animatedProps={animatedCircleProps}
           r={6}
           fill={'white'}
           stroke={'#F6F3BA'}
           strokeWidth={4}
         />
-        <Rect
-          x={xScale(dataPoints[activePoint][0])}
-          y={yScale(dataPoints[activePoint][1]) + 10}
+        <AnimatedRect
+          animatedProps={animatedBarProps}
+          translateX={-0.5}
           width={1}
           height={max([yScale(yMax - dataPoints[activePoint][1]), 0])}
           fill={'#F6F3BA'}
