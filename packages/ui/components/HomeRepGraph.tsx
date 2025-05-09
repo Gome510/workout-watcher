@@ -25,6 +25,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { getYForX, parse } from "react-native-redash";
+import { withErrorBoundary } from "../utils/errorBoundary";
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
@@ -54,7 +55,7 @@ type HomeRepGraph = {
   labelSize?: "small" | "medium" | "large";
 };
 
-export const HomeRepGraph = ({
+const HomeRepGraphComponent = ({
   style,
   height = 300,
   width: viewWidth,
@@ -248,3 +249,5 @@ export const HomeRepGraph = ({
     </Pressable>
   );
 };
+
+export const HomeRepGraph = withErrorBoundary(HomeRepGraphComponent);
