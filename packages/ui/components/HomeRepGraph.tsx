@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Svg, {
   Circle,
   Defs,
@@ -26,14 +26,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { getYForX, parse } from "react-native-redash";
 import { withErrorBoundary } from "../utils/errorBoundary";
+import { useGraphContext } from "./GraphProvider";
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 const AnimatedPolygon = Animated.createAnimatedComponent(Polygon);
 const AnimatedText = Animated.createAnimatedComponent(Text);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
-
-const data = [8, 10, 0, 11, 15, 10, 3];
-const dataPoints: [number, number][] = data.map((d, i) => [i, d]);
 
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const today = new Date(Date.now()).getDay();
@@ -62,6 +60,9 @@ const HomeRepGraphComponent = ({
   horizontalPadding = 16,
   labelSize = "large",
 }: HomeRepGraph) => {
+  const { dailyReps } = useGraphContext();
+  const dataPoints: [number, number][] = dailyReps.map((d, i) => [i, d]);
+
   const todayDataIndex = dataPoints.length - 1;
   const [activePoint, setActivePoint] = useState(todayDataIndex);
 
@@ -82,12 +83,12 @@ const HomeRepGraphComponent = ({
   const graphHeight = height - dayLabelHeight;
 
   const xScale = scaleLinear()
-    .domain([0, data.length - 1])
+    .domain([0, dailyReps.length - 1])
     .range([
       horizontalPadding + dayLabelWidth / 2,
       graphWidth + horizontalPadding + dayLabelWidth / 2,
     ]);
-  const maxData = max(data) || 0;
+  const maxData = max(dailyReps) || 0;
   const yMax = maxData + maxData * 0.2;
   const yScale = scaleLinear().domain([0, yMax]).range([graphHeight, 0]);
 
@@ -107,7 +108,7 @@ const HomeRepGraphComponent = ({
 
   const parsedPath = parse(pathD);
 
-  const xPositions = data.map((d, i) => xScale(i));
+  const xPositions = dailyReps.map((d, i) => xScale(i));
   const touchColumnWidth = xPositions[1] - xPositions[0];
   const touchBuckets: [number, number][] = xPositions.map((x) => [
     x - touchColumnWidth / 2,
